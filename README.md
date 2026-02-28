@@ -9,6 +9,12 @@ Orchestrates 12 specialized AI agents through structured pipelines to automate p
 
 ---
 
+## Architecture
+
+![UAM Flow Diagram](docs/uam-flow.png)
+
+---
+
 ## Overview
 
 ### Design Principles
