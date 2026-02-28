@@ -1,7 +1,7 @@
 # UAM (Unified Agent Methodology)
 
 A **standalone** multi-agent orchestration plugin for Claude Code.
-Combines the best of three agent orchestration systems (OMC, hoyeon, SG-Loop) into a unified pipeline.
+Orchestrates 12 specialized AI agents through structured pipelines to automate planning, implementation, and verification of software features.
 
 **Zero external dependencies** — requires only Claude Code + Node.js 16+.
 
@@ -10,14 +10,6 @@ Combines the best of three agent orchestration systems (OMC, hoyeon, SG-Loop) in
 ---
 
 ## Overview
-
-UAM is a standalone plugin that orchestrates 12 specialized AI agents through structured pipelines to automate planning, implementation, and verification of software features.
-
-| Source System | Strength | Adopted in UAM |
-|---------------|----------|----------------|
-| **OMC** | Fast parallel execution, keyword auto-activation, status dashboard | Phase 2 parallelization, keyword hook, uam-status skill |
-| **hoyeon** | Strict worker boundaries, self-contained fat skills, circuit breaker | Write guard hook, uam-bugfix skill, validate_prompt |
-| **SG-Loop** | Docker-isolated testing, convergence detection, session reset | Quality Gate, ConvergenceDetector, adaptive fix strategies |
 
 ### Design Principles
 
@@ -378,9 +370,16 @@ All hooks silently pass when UAM is inactive — no interference with normal wor
 
 ## References
 
-- **Design specification**: `docs/design_unified_agent_methodology.md`
-- **Korean documentation**: `docs/README_ko.md`
+- **Design specification**: [`docs/design_unified_agent_methodology.md`](docs/design_unified_agent_methodology.md)
+- **Korean documentation**: [`docs/README_ko.md`](docs/README_ko.md)
+
+### Influenced By
+
+UAM's design draws on ideas from these agent orchestration systems:
+
+- **[oh-my-claudecode (OMC)](https://github.com/nicobailey-llc/oh-my-claudecode)** — Multi-agent orchestration layer for Claude Code. Parallel execution, keyword auto-activation, status dashboard.
+- **[hoyeon](https://github.com/hoyeonkim795/hoyeon-claude-code)** — Strict orchestrator-worker separation, fat skill architecture, circuit breaker patterns.
 
 ---
 
-**UAM is a standalone agent orchestration plugin that combines the strengths of OMC, hoyeon, and SG-Loop into a unified pipeline. It runs entirely on Claude Code + Node.js with zero external dependencies.**
+**UAM is a standalone agent orchestration plugin for Claude Code. It runs entirely on Claude Code + Node.js with zero external dependencies.**
