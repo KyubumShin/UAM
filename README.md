@@ -186,7 +186,7 @@ Completed
 ### Write Guard
 
 When UAM is active, the orchestrator is blocked from writing source files directly:
-- **Allowed paths**: `.uam/`, `.omc/`, `.claude/`, `PLAN.md`, `docs/learnings/`
+- **Allowed paths**: `.uam/`, `.claude/`, `PLAN.md`, `docs/learnings/`
 - **Blocked**: All source files (`.ts`, `.py`, `.js`, `.go`, `.rs`, `.java`, `.c`, `.cpp`, etc.)
 - **Enforcement**: Hard block — operation does not proceed
 

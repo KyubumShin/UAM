@@ -44,7 +44,6 @@ const { readStdin } = await import(
 // Allowed path patterns (orchestrator CAN write to these)
 const ALLOWED_PATTERNS = [
   /\.uam\//,           // .uam/ state directory
-  /\.omc\//,           // .omc/ OMC state
   /\.claude\//,        // .claude/ config
   /\/\.claude\//,      // absolute .claude/ paths
   /\/UAM\//,           // UAM/ plugin directory

@@ -522,7 +522,7 @@ Edit/Write 호출 시:
   │   └── 비활성 → 통과 (기존 워크플로 간섭 없음)
   │
   ├── 파일 경로 검증
-  │   ├── 허용 경로 (.uam/, .omc/, .claude/, PLAN.md, docs/learnings/) → 통과
+  │   ├── 허용 경로 (.uam/, .claude/, PLAN.md, docs/learnings/) → 통과
   │   ├── 소스 파일 (.ts, .py, .js, ...) → BLOCK
   │   └── 기타 파일 → 통과
   │
