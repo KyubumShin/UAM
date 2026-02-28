@@ -1,7 +1,6 @@
 /**
  * Shared stdin utilities for UAM hooks
- * Local copy of OMC stdin helper for project portability.
- * See: ~/.claude/hooks/lib/stdin.mjs for the original
+ * Shared stdin reader for UAM hooks.
  */
 
 /**

@@ -5,7 +5,7 @@ description: UAM learning extraction and knowledge distillation - post-pipeline 
 # UAM Compound
 
 Extract learnings, decisions, and patterns from a completed (or cancelled) UAM pipeline run.
-Adapted from hoyeon's /compound pattern for knowledge distillation.
+Captures learnings, decisions, and patterns for knowledge distillation.
 
 ## When to Use
 

@@ -3,7 +3,7 @@
  * UAM Phase Controller Hook (Stop)
  * Manages phase transitions and loop continuation for the UAM pipeline.
  *
- * Based on: design doc section 9.2 hook 3 + OMC persistent-mode.mjs pattern
+ * Based on: design doc section 9.2 hook 3
  *
  * Phase transitions:
  * - phase2-sprint: checks PLAN.md checkboxes → all done → phase3-gate

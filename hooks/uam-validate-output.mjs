@@ -3,7 +3,7 @@
  * UAM Output Validation Hook (PostToolUse)
  * Inserts validation reminder when a validate_prompt-enabled agent completes.
  *
- * Based on: design doc section 9.2 hook 2 + hoyeon validate_prompt pattern
+ * Based on: design doc section 9.2 hook 2
  *
  * Agents with validate_prompt: gap-analyzer, tradeoff-analyzer, verification-planner, worker
  * When these agents complete via Task tool, this hook inserts a [UAM VALIDATION] reminder

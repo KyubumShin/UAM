@@ -3,7 +3,7 @@
  * UAM Keyword Detector Hook (UserPromptSubmit)
  * Detects "uam" keyword in user input and initializes UAM pipeline state.
  *
- * Based on: design doc section 9.2 hook 4 + OMC keyword-detector.mjs pattern
+ * Based on: design doc section 9.2 hook 4
  *
  * When "uam" is detected:
  * 1. Initialize .uam/state.json with default state

@@ -5,7 +5,7 @@ description: UAM standalone bug fix - adaptive 3-phase repair with circuit break
 # UAM Bugfix
 
 Standalone adaptive bug fixing protocol. Use this for targeted bug fixes **outside** the main UAM pipeline.
-Adapted from hoyeon's /bugfix pattern with UAM's circuit breaker logic.
+Uses adaptive 3-phase repair with circuit breaker logic.
 
 ## When to Use
 

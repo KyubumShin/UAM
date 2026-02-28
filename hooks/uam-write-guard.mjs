@@ -4,7 +4,7 @@
  * Blocks orchestrator from directly editing source files when UAM is active.
  * Source file edits must be delegated to uam-worker agents.
  *
- * Based on: design doc section 9.2 hook 1 + OMC pre-tool-use.mjs pattern
+ * Based on: design doc section 9.2 hook 1
  *
  * When UAM is inactive: does nothing (no interference with normal workflow)
  * When UAM is active: blocks Edit/Write on source files, allows config/state paths
@@ -21,11 +21,11 @@ const { isUamActive } = await import(
   pathToFileURL(join(__dirname, 'lib', 'uam-state.mjs')).href
 );
 
-// Import shared stdin reader (OMC pattern)
+// Import shared stdin reader
 const { readStdin } = await import(
   pathToFileURL(join(__dirname, 'lib', 'stdin.mjs')).href
 ).catch(() => {
-  // Fallback: inline stdin reader if OMC lib not available
+  // Fallback: inline stdin reader if lib not available
   return {
     readStdin: () => new Promise((resolve) => {
       const chunks = [];
