@@ -3,5 +3,6 @@
   "version": "1.0.0",
   "description": "Unified Agent Methodology - 5-Phase autonomous coding pipeline",
   "skills": "./skills/",
+  "agents": "./agents/",
   "hooks": "./hooks/hooks.json"
 }

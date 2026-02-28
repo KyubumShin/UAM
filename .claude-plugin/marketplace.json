@@ -1,0 +1,21 @@
+{
+  "name": "uam",
+  "description": "Unified Agent Methodology — 5-Phase autonomous coding pipeline with 12 specialized agents",
+  "owner": {
+    "name": "harness-lab"
+  },
+  "plugins": [
+    {
+      "name": "uam",
+      "description": "5-Phase Agent Orchestration: Plan → Sprint → Gate → Fix → Finalize",
+      "version": "1.0.0",
+      "author": {
+        "name": "harness-lab"
+      },
+      "source": "./",
+      "category": "productivity",
+      "tags": ["multi-agent", "orchestration", "autonomous-coding", "5-phase-pipeline"]
+    }
+  ],
+  "version": "1.0.0"
+}

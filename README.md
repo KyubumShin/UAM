@@ -315,13 +315,38 @@ docs/
 
 ## Installation
 
+### One-command install
+
+```bash
+git clone <repo-url>
+cd uam
+./install.sh          # 대화형: global/project 선택
+./install.sh --global # 모든 프로젝트에서 사용
+./install.sh --project # 현재 프로젝트에서만 사용
+```
+
+Claude Code를 재시작하면 활성화.
+
+### Uninstall
+
+```bash
+./uninstall.sh          # 심링크 제거
+./uninstall.sh --clean  # + .uam/ 상태 파일 제거
+```
+
+### Verify
+
+Claude Code에서:
+```
+/uam:uam-manage status
+```
+
 ### Requirements
 
 - Node.js 16+ (for `.mjs` hook execution)
 - Claude Code with plugin support
-- `.claude/` directory (Claude Code configuration)
 
-### Setup
+### Manual Setup (alternative)
 
 ```bash
 # 1. Create required directories
