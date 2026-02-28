@@ -169,7 +169,83 @@ Task(subagent_type="uam-code-reviewer", model="sonnet",
   - Proceed to finalization
 - **NEEDS_FIXES** (critical>0) → Gate 2 FAIL
   - Update state: `gate_results.gate2_passed = false`
-  - Stop hook handles retry logic (back to `small-sprint`, max 3 retries)
+  - Apply Fix Memory protocol (below), then retry (back to `small-sprint`, max 3 retries)
+
+### Small Fix Memory Protocol
+
+Small pipeline은 간소화된 분류 체계를 사용한다 (F-1, F-2, F-4만):
+
+| 유형 | 설명 | 전략 |
+|------|------|------|
+| F-1 | 빌드 실패 (컴파일/타입 에러) | 에러 메시지 기반 직접 수정 |
+| F-2 | 테스트 실패 (assertion fail) | 스택 트레이스 기반 수정 |
+| F-4 | 리뷰 거절 (code-reviewer NEEDS_FIXES) | 리뷰 코멘트 항목별 수정 |
+
+런타임(F-3), 회귀(F-5), 반복 실패(F-6)는 small pipeline에서 사용하지 않음.
+
+#### fix_history 기록
+
+각 retry 시 `state.json`의 `fix_history` 배열에 push:
+
+```json
+{
+  "loop": N,
+  "types": ["F-4"],
+  "pass_rate": null,
+  "resolved": [],
+  "unresolved": ["review: missing error handling"]
+}
+```
+
+#### Fix Memory File (hybrid/raw mode only)
+
+If `fix_memory.mode !== 'summary'`, create `.uam/fix-memory/loop-{N}.md`:
+
+```markdown
+# Fix Loop {N} — {timestamp}
+
+## Classification
+- Types: {F-1|F-2|F-4}
+
+## Summary
+- Gate: Gate 2 (Code Review) FAIL
+- Issues: {critical count} critical, {warning count} warnings
+
+## Raw Output (truncated to max_raw_lines)
+{code-reviewer 출력 중 NEEDS_FIXES 항목만}
+
+## Previous Attempts
+- Loop 1: {types} → {outcome}
+```
+
+#### Worker Prompt by fix_memory.mode
+
+**summary** (기본):
+```
+Task(subagent_type="uam-worker", model="sonnet",
+     prompt="Fix review issues: {desc}
+Classification: {type_code}
+Review feedback: {500자 요약}")
+```
+
+**hybrid**:
+```
+Task(subagent_type="uam-worker", model="sonnet",
+     prompt="Fix review issues: {desc}
+Classification: {type_code}
+Read .uam/fix-memory/loop-1.md through loop-{N}.md for full context.
+Summary: {간략 요약}
+Do NOT repeat approaches from previous loops.")
+```
+
+**raw**:
+```
+Task(subagent_type="uam-worker", model="sonnet",
+     prompt="Fix review issues: {desc}
+Classification: {type_code}
+Read .uam/fix-memory/loop-1.md through loop-{N}.md.
+Analyze raw review output before fixing.")
+```
 
 ### Finalization (on pass)
 

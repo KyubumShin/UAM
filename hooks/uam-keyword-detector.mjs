@@ -130,10 +130,16 @@ async function main() {
     // Detect small/quick/light variant
     const isSmallRun = /\buam[\s-]*(small|quick|light)\b/i.test(cleanPrompt);
 
+    // Detect fix-memory flag
+    const fixMemoryMatch = cleanPrompt.match(/--fix-memory(?:=(hybrid|raw|summary))?/i);
+    const fixMemoryMode = fixMemoryMatch
+      ? (fixMemoryMatch[1] || 'hybrid')  // --fix-memory alone defaults to hybrid
+      : 'summary';                        // no flag defaults to summary
+
     // Initialize UAM state with appropriate run mode
     const featureName = extractFeatureName(prompt);
     const runMode = isSmallRun ? 'small' : 'full';
-    initState(cwd, featureName, runMode);
+    initState(cwd, featureName, runMode, fixMemoryMode);
 
     // Return magic keyword to trigger appropriate UAM skill
     const skillName = isSmallRun ? 'uam-small' : 'uam';
@@ -147,7 +153,7 @@ async function main() {
 
     const message = `[MAGIC KEYWORD: UAM]
 
-${pipelineDesc} activated. State initialized at .uam/state.json (run_mode: "${runMode}").
+${pipelineDesc} activated. State initialized at .uam/state.json (run_mode: "${runMode}", fix_memory: "${fixMemoryMode}").
 
 You MUST invoke the skill using the Skill tool:
 

@@ -307,28 +307,158 @@ Update state: `gate_results.gate3_passed = true|false`
 
 ### Failure Classification
 
-| Pattern | Strategy | Action |
-|---------|----------|--------|
-| 1-2 test failures, new errors | Simple fix | Worker targeted fix, re-verify |
-| Same error 3x consecutive | Session reset | New approach, structured failure summary |
-| >50% failures OR 10%+ pass rate drop | Circuit breaker | Phase 1 re-plan |
+#### Step 1: Determine Type
 
-### ConvergenceDetector Logic
+Gate 결과 수신 후 판별 (오케스트레이터 내부 로직):
+
+1. Gate 1 (Tests) FAIL:
+   - 빌드 자체 실패? → **F-1** (빌드 실패: 컴파일/타입 에러)
+   - 이전 루프 통과 테스트가 실패? → **F-5** (회귀)
+   - 동일 에러 fingerprint 2회+ 연속? → **F-6** (반복 실패)
+   - timeout/crash/OOM? → **F-3** (런타임 에러)
+   - assertion 실패? → **F-2** (테스트 실패)
+
+2. Gate 2 (Review) FAIL → **F-4** (리뷰 거절)
+
+3. TODO 미완료 잔존:
+   - 파일 변경 없음 → **U-1** (미착수)
+   - 파일 변경 있음 + criteria 일부만 통과 → **U-2** (부분 구현)
+   - dependency 미완료 → **U-3** (의존성 차단)
+
+#### Step 2: Fingerprint (F-5, F-6 판별용)
+
+```
+fingerprint = {error_type}@{file_path}:{line}:{first_frame_function}
+```
+
+Compare against `fix_history[].fingerprints` to detect recurrence.
+
+#### Step 3: Record to fix_history
+
+Update `state.json` `fix_history` array — push entry for current loop:
+
+```json
+{
+  "loop": N,
+  "types": ["F-2", "F-4"],
+  "fingerprints": ["AssertionError@src/auth.ts:42:validate"],
+  "pass_rate": 0.75,
+  "resolved": ["F-1 from loop 1"],
+  "unresolved": ["F-2: login test", "F-4: missing error handling"]
+}
+```
+
+---
+
+### Fix Memory File (hybrid/raw mode only)
+
+If `fix_memory.mode !== 'summary'`, create `.uam/fix-memory/loop-{N}.md`:
+
+```markdown
+# Fix Loop {N} — {timestamp}
+
+## Classification
+- Types: {F-2, F-4, ...}
+- Fingerprints: {list}
+- Recurrence: {new | recurring(N회)}
+
+## Summary
+- Gate: {which gate failed}
+- Pass rate: {X}/{Y} ({pct}%), previous: {prev_pct}% {↑↓}
+- New failures: {N}, Resolved: {N}, Remaining: {N}
+- Strategy: {targeted-fix | session-reset | circuit-breaker}
+
+## Raw Output (truncated to max_raw_lines)
+{실패 테스트 출력 — pass한 테스트 제거, 스택 3프레임 제한}
+
+## Previous Attempts
+- Loop 1: {types} → {outcome}
+- Loop 2: {types} → {outcome}
+
+## Changes Since Last Loop (include_diff=true일 때만)
+{git diff --stat}
+```
+
+**Truncation 규칙:**
+1. Pass한 테스트 출력 제거 (실패만 보존)
+2. 스택 트레이스 3프레임 제한
+3. `max_raw_lines` 초과 시 `[truncated: N lines omitted]` 표시
+
+---
+
+### Strategy Mapping
+
+| 유형 | Worker 모델 | 추가 에이전트 | 접근법 |
+|------|------------|------------|--------|
+| U-1 | sonnet | — | 일반 구현 |
+| U-2 | sonnet | — | 이어서 구현 |
+| U-3 | — | — | 스킵, 순서 재배치 |
+| F-1 | sonnet | — | 에러 메시지 기반 직접 수정 |
+| F-2 | sonnet | — | 스택 트레이스 기반 수정 |
+| F-3 | sonnet | debugger 선투입 | 근본 원인 분석 후 수정 |
+| F-4 | sonnet | — | 리뷰 코멘트 항목별 수정 |
+| F-5 | sonnet | — | 원인 diff 분석 + 롤백 검토 |
+| F-6 | **opus** 상향 | debugger | "이전 접근법 금지" + 전체 이력 |
+
+---
+
+### Worker Prompt by fix_memory.mode
+
+#### summary (기본)
+
+```
+Task(subagent_type="uam-worker", model="sonnet",
+     prompt="Fix: {desc}
+Classification: {type_code}
+Previous attempt failed: {500자 요약}
+Strategy: {strategy}")
+```
+
+#### hybrid
+
+```
+Task(subagent_type="uam-worker", model="sonnet",
+     prompt="Fix: {desc}
+Classification: {type_code}
+Read .uam/fix-memory/loop-1.md through loop-{N}.md for full context.
+Summary: {간략 요약}
+Strategy: {strategy}
+Do NOT repeat approaches from previous loops.")
+```
+
+#### raw
+
+```
+Task(subagent_type="uam-worker", model="sonnet",
+     prompt="Fix: {desc}
+Classification: {type_code}
+Read .uam/fix-memory/loop-1.md through loop-{N}.md.
+Analyze raw test output and previous changes before fixing.
+Strategy: {strategy}")
+```
+
+---
+
+### ConvergenceDetector + Classification
 
 After each fix iteration:
 ```
 pass_rate_history.push(current_pass_rate)
 recent_3 = pass_rate_history.slice(-3)
 
+if F-6 count >= 3 → Circuit breaker (Phase 1 재계획)
+if F-5 (회귀) → 직전 변경 롤백 후 다른 접근
+if F-3 (런타임) → debugger 선투입
 if (recent_3 variance < 5%) → Stagnation → Session reset strategy
 if (current - previous < -10%) → Regression → Circuit breaker
-if (improving) → Continue
+if pass_rate 하락 > 10% → Circuit breaker
+else → 유형별 기본 전략
 ```
 
 ### HITL Direction Check (every loop)
 
 ```
-AskUserQuestion: "{N}번째 수정 루프. 테스트 통과율 {X}%. 계속 진행할까요?"
+AskUserQuestion: "{N}번째 수정 루프. 테스트 통과율 {X}%. 분류: {type_codes}. 계속 진행할까요?"
 Options:
   1. "계속" → Continue fix loop
   2. "방향 변경" → Phase 1 re-plan
@@ -339,6 +469,10 @@ Timeout: 30 seconds → Auto-select option 1
 Increment state: `fix_loop_count += 1`
 
 After fix: re-run Phase 3 gates (state → phase3-gate)
+
+### Cleanup
+
+Phase 5 진입 시 또는 cancel 시 `.uam/fix-memory/` 디렉토리 삭제 (디스크 낭비 방지).
 
 ---
 

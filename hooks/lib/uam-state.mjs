@@ -44,7 +44,13 @@ const DEFAULT_STATE = {
     stagnation_window: 3,
     min_improvement: 0.05,
     regression_threshold: -0.10
-  }
+  },
+  fix_memory: {
+    mode: 'summary',        // 'summary' | 'hybrid' | 'raw'
+    max_raw_lines: 50,      // raw output truncation limit
+    include_diff: false      // include worker change diff
+  },
+  fix_history: []            // per-loop classification history
 };
 
 /**
@@ -106,7 +112,7 @@ export function isUamActive(cwd) {
  * @param {string} runMode - Pipeline mode: 'full' (5-phase) or 'small' (3-phase lightweight)
  * @returns {object} Initial state
  */
-export function initState(cwd, featureName, runMode = 'full') {
+export function initState(cwd, featureName, runMode = 'full', fixMemoryMode = 'summary') {
   const now = new Date().toISOString();
   const dateStr = now.slice(0, 10).replace(/-/g, '');
   const slug = featureName.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
@@ -123,7 +129,12 @@ export function initState(cwd, featureName, runMode = 'full') {
       ...DEFAULT_STATE.cost,
       max_total_tokens: isSmall ? 150000 : 500000
     },
-    started_at: now
+    started_at: now,
+    fix_memory: {
+      ...DEFAULT_STATE.fix_memory,
+      mode: fixMemoryMode
+    },
+    fix_history: []
   });
 }
 
