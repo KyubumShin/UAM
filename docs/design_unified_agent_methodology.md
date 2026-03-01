@@ -212,29 +212,23 @@ TODO-1 → TODO-3 → TODO-4
 
 ### 3.3 에이전트 출력 스키마 강제
 
-hoyeon의 `validate_prompt` 패턴을 적용한다. 각 분석 에이전트는 YAML 프론트매터에 출력 스키마를 정의하고, PostToolUse 훅이 자동으로 검증한다.
+hoyeon의 `validate_prompt` 패턴에서 영감을 받되, **훅 내부 하드코딩 방식**으로 구현한다. 에이전트별 필수 출력 섹션을 PostToolUse 훅(`uam-validate-output.mjs`)의 `EXPECTED_SECTIONS` 상수에 정의하고, 에이전트 Task 완료 시 자동으로 검증 리마인더를 삽입한다.
 
-**gap-analyzer validate_prompt 예시**:
-```yaml
-validate_prompt: |
-  Must contain 4 sections:
-  1. Missing Requirements — 누락된 요구사항
-  2. AI Pitfalls — AI 에이전트가 빠지기 쉬운 함정
-  3. Must NOT Do — 하지 말아야 할 것
-  4. Recommended Questions — 사용자에게 물어야 할 질문
-```
+> **설계 결정**: YAML 프론트매터 방식 대신 훅 하드코딩을 선택한 이유:
+> 1. YAML 파싱 불필요 — 훅 실행 시간 절감 (3초 타임아웃 제약)
+> 2. 오타 위험 제거 — `validate_prompt` 키 누락/오타 시 검증이 조용히 스킵되는 문제 방지
+> 3. 중앙 관리 — 모든 에이전트의 출력 스키마를 한 곳에서 확인/수정 가능
+>
+> 트레이드오프: 새 에이전트 추가 시 훅 파일도 함께 수정해야 한다.
 
-**verification-planner validate_prompt 예시**:
-```yaml
-validate_prompt: |
-  Must contain 6 sections:
-  1. Test Infrastructure — Tier 1~4별 있음/없음 + 도구/경로
-  2. A-items — Agent-Verifiable, Tier 1-3
-  3. S-items — Sandbox Agent Testing, Tier 4
-  4. H-items — Human-Required 항목
-  5. Verification Gaps — 환경 제약 및 대안
-  6. External Dependencies — 외부 의존성별 전략
-```
+**검증 대상 에이전트와 필수 섹션**:
+
+| 에이전트 | 필수 출력 섹션 |
+|---------|-------------|
+| gap-analyzer | 1. Missing Requirements, 2. AI Pitfalls, 3. Must NOT Do, 4. Recommended Questions |
+| tradeoff-analyzer | Overall Risk Assessment, Change-Level Analysis, Recommended Execution Order |
+| verification-planner | 1. Test Infrastructure, 2. A-items, 3. S-items, 4. H-items, 5. Verification Gaps, 6. External Dependencies |
+| worker | todo_id, status, outputs, acceptance_criteria |
 
 ---
 
@@ -675,32 +669,31 @@ echo '{"allow": false, "message": "Source files must be edited by worker agents,
 exit 0
 ```
 
-#### 훅 2: PostToolUse validate_prompt 검증
+#### 훅 2: PostToolUse 출력 스키마 검증
 
-```bash
-#!/bin/bash
-# uam-validate-output.sh
-# 에이전트 완료 시 출력 스키마 검증 트리거
+```javascript
+// uam-validate-output.mjs
+// 에이전트 Task 완료 시 출력 스키마 검증 리마인더 삽입
 
-AGENT_TYPE="$1"      # subagent_type (예: gap-analyzer)
-AGENT_OUTPUT="$2"    # 에이전트 출력 텍스트
+// 검증 대상 에이전트 목록 (하드코딩 — §3.3 설계 결정 참조)
+const VALIDATE_AGENTS = new Set([
+  'uam-gap-analyzer', 'uam-tradeoff-analyzer',
+  'uam-verification-planner', 'uam-worker',
+]);
 
-# 에이전트 정의 파일에서 validate_prompt 파싱
-AGENT_DEF=".claude/agents/${AGENT_TYPE}.md"
-if [ ! -f "$AGENT_DEF" ]; then
-  exit 0  # 정의 파일 없으면 스킵
-fi
+// 에이전트별 필수 출력 섹션
+const EXPECTED_SECTIONS = {
+  'uam-gap-analyzer': ['1. Missing Requirements', '2. AI Pitfalls', '3. Must NOT Do', '4. Recommended Questions'],
+  'uam-tradeoff-analyzer': ['Overall Risk Assessment', 'Change-Level Analysis', 'Recommended Execution Order'],
+  'uam-verification-planner': ['1. Test Infrastructure', '2. A-items', '3. S-items', '4. H-items', '5. Verification Gaps', '6. External Dependencies'],
+  'uam-worker': ['todo_id', 'status', 'outputs', 'acceptance_criteria'],
+};
 
-VALIDATE_PROMPT=$(grep -A 100 'validate_prompt:' "$AGENT_DEF" | head -20)
-if [ -z "$VALIDATE_PROMPT" ]; then
-  exit 0  # validate_prompt 없으면 스킵
-fi
-
-# Claude에게 검증 리마인더 출력
-echo "{\"message\": \"[VALIDATION REMINDER] Verify agent output matches schema: ${VALIDATE_PROMPT}\"}"
+// PostToolUse(Task) 이벤트 수신 → VALIDATE_AGENTS에 해당하면
+// [UAM VALIDATION] 리마인더를 additionalContext로 삽입
 ```
 
-> **주의** (hoyeon lessons-learned 출처): `validate_prompt` 키 오타(예: `validation_prompt`)는 훅이 조용히 검증을 건너뛰게 한다. 프론트매터 린터를 통해 사전 방지해야 한다.
+> **새 에이전트 추가 시**: `VALIDATE_AGENTS`와 `EXPECTED_SECTIONS`에 항목을 추가해야 한다. 에이전트 정의 파일(.md)에는 별도 키가 필요 없다.
 
 #### 훅 3: Stop 훅 — Phase 전환
 
@@ -1046,7 +1039,7 @@ hoyeon의 패턴을 채택: **PLAN.md의 체크박스 상태가 진행의 유일
 | Deferred fix | 실패를 즉시 수정하지 않고 다음 반복으로 미루는 전략 | SG-Loop |
 | Circuit breaker | 반복 실패 시 종료 대신 상위 Phase로 에스컬레이션하는 메커니즘 | hoyeon |
 | ConvergenceDetector | pass rate 추이 기반 진전 정체/발산을 감지하는 컴포넌트 | SG-Loop |
-| validate_prompt | 에이전트 출력 스키마를 YAML 프론트매터로 정의하고 훅으로 강제하는 패턴 | hoyeon |
+| validate_prompt | 에이전트 출력 스키마를 훅 내부 `EXPECTED_SECTIONS` 상수로 정의하고 PostToolUse에서 검증 리마인더를 삽입하는 패턴. hoyeon의 YAML 프론트매터 방식에서 영감을 받되 하드코딩으로 간소화 (§3.3 참조) | hoyeon → UAM |
 | Graceful Degradation | 외부 도구 실패 시 SKIPPED/DEGRADED 상태로 폴백하는 패턴 | hoyeon |
 | Quick Plan | hoyeon /specify를 간소화한 UAM Phase 1. HITL을 9회에서 1회로 축소 | UAM |
 | Quality Gate | SG-Loop Docker 테스트 + hoyeon 멀티모델 리뷰를 결합한 UAM Phase 3 | UAM |
