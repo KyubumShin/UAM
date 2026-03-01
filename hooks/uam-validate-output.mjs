@@ -41,7 +41,11 @@ const { readStdin } = await import(
   };
 });
 
-// Agents that require output validation
+// Agents that require output validation.
+// Design decision (§3.3): hardcoded here instead of YAML frontmatter in agent files.
+// Reason: avoids YAML parsing overhead, eliminates key-typo silent-skip risk,
+// and centralizes all validation rules in one place.
+// Trade-off: new agents require updating both VALIDATE_AGENTS and EXPECTED_SECTIONS.
 const VALIDATE_AGENTS = new Set([
   'uam-gap-analyzer',
   'uam-tradeoff-analyzer',

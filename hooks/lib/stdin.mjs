@@ -17,6 +17,9 @@ export async function readStdin(timeoutMs = 5000) {
       if (!settled) {
         settled = true;
         process.stdin.removeAllListeners();
+        // Safe: each hook runs as an independent process, so destroying stdin
+        // has no side effects. We destroy rather than pause/unref to ensure
+        // the process exits promptly and doesn't hang on open stdin.
         process.stdin.destroy();
         resolve(Buffer.concat(chunks).toString('utf-8'));
       }

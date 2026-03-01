@@ -139,7 +139,35 @@ export function initState(cwd, featureName, runMode = 'full', fixMemoryMode = 's
 }
 
 /**
- * Deep merge two objects (shallow for arrays)
+ * Append item(s) to an array field in state without overwriting existing entries.
+ * Useful for fix_history, pass_rate_history, etc.
+ * @param {string} cwd - Working directory
+ * @param {string} key - Dot-separated path to the array field (e.g. 'fix_history' or 'convergence.pass_rate_history')
+ * @param  {...any} items - Items to append
+ * @returns {object} Updated state
+ */
+export function appendToArray(cwd, key, ...items) {
+  const state = readState(cwd);
+  if (!state) return null;
+
+  // Navigate to the parent object and resolve the final key
+  const parts = key.split('.');
+  let target = state;
+  for (let i = 0; i < parts.length - 1; i++) {
+    target = target[parts[i]];
+    if (!target || typeof target !== 'object') return state;
+  }
+
+  const finalKey = parts[parts.length - 1];
+  const existing = Array.isArray(target[finalKey]) ? target[finalKey] : [];
+  target[finalKey] = [...existing, ...items];
+
+  return writeState(cwd, state);
+}
+
+/**
+ * Deep merge two objects.
+ * Arrays are replaced (not concatenated) — use appendToArray() for array accumulation.
  */
 function deepMerge(target, source) {
   const result = { ...target };

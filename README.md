@@ -101,7 +101,7 @@ Completed
 
 ## Skills & Commands
 
-### Skills (8)
+### Skills (10)
 
 | Skill | Invocation | Purpose |
 |-------|-----------|---------|
@@ -113,6 +113,8 @@ Completed
 | **uam-resume** | `/uam:uam-resume` | Resume cancelled pipeline from last phase |
 | **uam-bugfix** | `/uam:uam-bugfix` | Standalone adaptive bug fixing (3 attempts + circuit breaker) |
 | **uam-compound** | `/uam:uam-compound` | Learning extraction + knowledge distillation |
+| **uam-manage** | `/uam:uam-manage` | Plugin management (status, update, uninstall, doctor) |
+| **uam-migrate** | `/uam:uam-migrate` | Migrate from other orchestration systems (OMC, hoyeon) |
 
 ### Commands (2)
 
@@ -296,7 +298,7 @@ commands/                        # 2 commands
 ├── uam-run.md
 └── uam-small-run.md
 
-skills/                          # 8 skills
+skills/                          # 10 skills
 ├── uam/SKILL.md
 ├── uam-small/SKILL.md
 ├── uam-pivot/SKILL.md
@@ -304,7 +306,9 @@ skills/                          # 8 skills
 ├── uam-cancel/SKILL.md
 ├── uam-resume/SKILL.md
 ├── uam-bugfix/SKILL.md
-└── uam-compound/SKILL.md
+├── uam-compound/SKILL.md
+├── uam-manage/SKILL.md
+└── uam-migrate/SKILL.md
 
 docs/
 ├── design_unified_agent_methodology.md   # Full design specification

@@ -25,7 +25,7 @@ UAM은 외부 프레임워크 없이 완전히 독립적으로 동작한다:
 
 - **자체 훅 시스템**: 4개 훅이 상태 관리, Phase 전환, 쓰기 가드를 처리
 - **자체 상태 관리**: `.uam/state.json`으로 파이프라인 상태 추적
-- **자체 스킬셋**: 8개 스킬이 활성화/PP인터뷰/상태/취소/재개/버그수정/학습추출을 커버
+- **자체 스킬셋**: 10개 스킬이 활성화/PP인터뷰/상태/취소/재개/버그수정/학습추출/관리/마이그레이션을 커버
 - **자체 에이전트**: 12개 전문 에이전트가 Phase별 역할 수행
 - **공존 가능**: 다른 플러그인이 설치되어 있어도 간섭하지 않음 (UAM 비활성 시 훅 패스)
 
@@ -64,9 +64,9 @@ UAM은 외부 프레임워크 없이 완전히 독립적으로 동작한다:
 /uam:uam-run            # 오케스트레이션 프로토콜 전체 로드
 ```
 
-### 스킬셋 (8개 스킬 + 2개 커맨드)
+### 스킬셋 (10개 스킬 + 2개 커맨드)
 
-UAM은 8개 독립형 스킬로 전체 라이프사이클을 커버한다:
+UAM은 10개 독립형 스킬로 전체 라이프사이클을 커버한다:
 
 | 스킬 | 호출 | 목적 |
 |------|------|------|
@@ -78,6 +78,8 @@ UAM은 8개 독립형 스킬로 전체 라이프사이클을 커버한다:
 | **uam-resume** | `/uam:uam-resume` | 취소된 파이프라인을 이전 Phase에서 재개 |
 | **uam-bugfix** | `/uam:uam-bugfix` | 독립형 적응적 버그 수정 (3회 시도 + 서킷 브레이커) |
 | **uam-compound** | `/uam:uam-compound` | 학습 추출 + 지식 증류 + 프로젝트 메모리 갱신 |
+| **uam-manage** | `/uam:uam-manage` | 플러그인 관리 (상태, 업데이트, 제거, 진단) |
+| **uam-migrate** | `/uam:uam-migrate` | 다른 오케스트레이션 시스템(OMC, hoyeon)에서 마이그레이션 |
 
 **커맨드**:
 - `/uam:uam-run` — Phase 1-5 상세 오케스트레이션 프로토콜 참조 문서
@@ -768,7 +770,7 @@ project-memory 업데이트
 ## 8. 파일 구조
 
 ```
-harness_lab/UAM/
+uam/
 
 .claude-plugin/
 └── plugin.json                     # 플러그인 매니페스트
@@ -801,7 +803,7 @@ commands/                            # 2개 커맨드
 ├── uam-run.md                      # UAM 5-Phase 오케스트레이션 프로토콜
 └── uam-small-run.md                # UAM 3-Phase 경량 오케스트레이션 프로토콜
 
-skills/                              # 8개 스킬 (디렉토리/SKILL.md 규격)
+skills/                              # 10개 스킬 (디렉토리/SKILL.md 규격)
 ├── uam/SKILL.md                    # 전체 5-Phase 파이프라인 활성화
 ├── uam-small/SKILL.md              # 경량 3-Phase 파이프라인 활성화
 ├── uam-pivot/SKILL.md              # Phase 0: Pivot Points 인터뷰
@@ -809,7 +811,9 @@ skills/                              # 8개 스킬 (디렉토리/SKILL.md 규격
 ├── uam-cancel/SKILL.md             # 안전한 중단 + 상태 보존
 ├── uam-resume/SKILL.md             # 이전 Phase에서 재개
 ├── uam-bugfix/SKILL.md             # 독립형 적응적 버그 수정
-└── uam-compound/SKILL.md           # 학습 추출 + 지식 증류
+├── uam-compound/SKILL.md           # 학습 추출 + 지식 증류
+├── uam-manage/SKILL.md             # 플러그인 관리 (상태/업데이트/제거/진단)
+└── uam-migrate/SKILL.md            # 다른 시스템에서 마이그레이션
 
 docs/
 └── design_unified_agent_methodology.md  # 전체 설계 사양
@@ -821,7 +825,7 @@ README.md                          # 본 문서
 
 ## 9. 설계 문서 참조
 
-**전체 사양**: [`docs/design_unified_agent_methodology.md`](/Users/kbshin/project/harness_lab/docs/design_unified_agent_methodology.md)
+**전체 사양**: [`docs/design_unified_agent_methodology.md`](design_unified_agent_methodology.md)
 
 본 README는 요약본이다. 상세한 내용은 설계 문서를 참조하라:
 
