@@ -90,8 +90,8 @@ async function main() {
 
   const toolName = data.tool_name || data.toolName || '';
 
-  // Only intercept Edit and Write tools
-  if (!['Edit', 'Write', 'edit', 'write'].includes(toolName)) {
+  // Only intercept Edit, Write, and NotebookEdit tools
+  if (!['Edit', 'Write', 'edit', 'write', 'NotebookEdit', 'notebookedit'].includes(toolName)) {
     console.log(JSON.stringify({ continue: true, suppressOutput: true }));
     return;
   }
@@ -104,9 +104,9 @@ async function main() {
     return;
   }
 
-  // Extract file path
+  // Extract file path (NotebookEdit uses notebook_path instead of file_path)
   const toolInput = data.tool_input || data.toolInput || {};
-  const filePath = toolInput.file_path || toolInput.filePath || '';
+  const filePath = toolInput.file_path || toolInput.filePath || toolInput.notebook_path || toolInput.notebookPath || '';
 
   if (!filePath) {
     console.log(JSON.stringify({ continue: true, suppressOutput: true }));
