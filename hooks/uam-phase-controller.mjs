@@ -58,7 +58,7 @@ function checkPlanStatus(cwd) {
     if (!existsSync(planPath)) continue;
 
     const content = readFileSync(planPath, 'utf-8');
-    const todoPattern = /### \[( |x|FAILED)\]/gi;
+    const todoPattern = /### \[( |x|X|FAILED)\]/g;
     const matches = [...content.matchAll(todoPattern)];
 
     if (matches.length === 0) return { total: 0, completed: 0, failed: 0 };
@@ -66,8 +66,9 @@ function checkPlanStatus(cwd) {
     let completed = 0;
     let failed = 0;
     for (const m of matches) {
-      if (m[1].toLowerCase() === 'x') completed++;
-      else if (m[1].toUpperCase() === 'FAILED') failed++;
+      const mark = m[1];
+      if (mark === 'x' || mark === 'X') completed++;
+      else if (mark === 'FAILED') failed++;
     }
 
     return { total: matches.length, completed, failed };
